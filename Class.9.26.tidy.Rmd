@@ -84,7 +84,44 @@ lotr_df =
   relocate(movie)
 
 print(lotr_df)
-
 ```
 
 
+## Revisit FAS
+
+```{r}
+litters_df = 
+  read_csv("data/FAS_litters.csv") |> 
+  janitor::clean_names() |> 
+  mutate(wt_gain = gd18_weight - gd0_weight) |> 
+  select(litter_number, group, wt_gain) |> 
+  separate(group, into = c("dose", "day_of_tx"), 3)
+
+print(litters_df)
+
+pups_df = 
+  read_csv("data/FAS_pups.csv") |> 
+  janitor::clean_names() |> 
+  mutate(
+    sex = case_match(
+      sex, 
+      1 ~ "male",
+      2 ~ "female"
+    )
+  )
+
+print(pups_df)
+
+fas_df = 
+  left_join(pups_df, litters_df, by = "litter_number")
+print(fas_df)
+```
+
+## Notes:
+
+left_join combines datasets based on the same column value, keeps all the obsevations in dataset x
+  can also use right_join (dataset y) or full_join (all observations in both datasets)
+  left_join( x,y,by = "")
+mutate modifies the variable, deletes variables, or creates new variable
+separate can divide a variable name into two variable names, need to choose deliminter based on character position or some other characteristic
+pivot_longer lengthens the data by increasing the number of columns or rows (inverse is pivot_wider)
