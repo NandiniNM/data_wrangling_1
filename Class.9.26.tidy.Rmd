@@ -1,5 +1,5 @@
 ---
-title: "Data Manipulation"
+title: "Tidyverse"
 output: html_document
 ---
 
@@ -12,265 +12,79 @@ library(haven)
 #ctrl + alt + I - shortcut for code chunk
 ```
 
-Let's import the 'FAS_litters.csv' csv using a relative path.
-
-```{r}
-litters_df = 
-  read_csv("data/Fas_litters.csv")
-
-litters_df = 
-  janitor::clean_names(litters_df)
-
-litters_df
-
-```
-
-Janitor cleans up column names by making lower case and converting to snake case
-
-Let's import the 'FAS_litters.csv' csv using an absolute path.
-
-```{r}
-#litters_df = 
-  #read_csv("~/Documents/R/Data Science/data_wrangling_1/data/FAS_litters.csv")
-```
-This line isn't working, come back to it later.
-
-Let's import the 'FAS_pups.csv' csv using a relative path.
-
-```{r}
-pups_df = 
-  read_csv("data/Fas_pups.csv")
-
-pups_df = 
-  janitor::clean_names(pups_df)
-```
-
-## Look at data
-
-```{r}
-litters_df # prints first 10 rows of data
-
-head(litters_df) # prints first 6 rows of data
-
-tail(litters_df) # prints end of the dataset
-```
-
-View the entire dataset
-
-```{r, eval = FALSE}
-view(litters_df)
-```
-
-Look at a data summary
-
-```{r}
-str(litters_df)
-
-skimr::skim(litters_df)
-```
-
-## Options in 'read_*'
-
-```{r}
-litters_df = 
-  read_csv("data/FAS_litters.csv")
-#automatically assumes first row is column names and reads in data accordingly
-
-litters_df = 
-  read_csv("data/FAS_litters.csv",
-           skip = 10, col_names = FALSE)
-#skips first 10 rows, and does not assume first row is column names, R will assign its own names to columns
-
-```
-
-look at NA values
-
-```{r}
-litters_df = 
-  read_csv("data/FAS_litters.csv",
-           na = c("NA",19))
-#assigns values as NA and re-codes the  - anywhere that has "NA" or 19 is treated as missing variable
-```
-
-Column types
-
-```{r}
-litters_df = 
-  read_csv("data/FAS_litters.csv",
-           col_types = 
-             cols(
-               Group = col_factor(),
-             ))
-```
-
-## other file types 
-
-Import a xlsx file first
-
-```{r}
-mlb_df = 
-  read_excel("data/mlb11.xlsx")
-
-mlb_df
-```
-
-Import a sas file
+## PULSE data
 
 ```{r}
 pulse_df = 
-  read_sas("data/public_pulse_data.sas7bdat")
-
-pulse_df
-```
-
-## Base R 
-
-don't ever use read.csv, only read_csv
-
-```{r, eval = FALSE}
-litters_df = 
-  read.csv("data/FAS_litters.csv")
-```
-
-## Export data
-
-We have code that "cleans" data and need to export it.
-
-```{r}
-litters_df_cleaned = 
-  read_csv("data/FAS_litters.csv")
-
-litters_df_cleaned = 
-  janitor::clean_names(litters_df_cleaned)
-
-write_csv(litters_df_cleaned, "data/litters_cleaned.csv")
-```
-
-Date: 21Sept2023
-Import FAS litters and pups.
-
-```{r}
-litters_df = 
-  read.csv("data/FAS_litters.csv")
-litters_df = 
-  janitor::clean_names(litters_df)
-
-pups_df = 
-  read.csv("data/FAS_pups.csv")
-pups_df = 
-  janitor::clean_names(pups_df)
-```
-
-##select
-
-```{r}
-select(litters_df, group ,litter_number, gd0_weight) #will select defined columns and organize into new dataframe
-
-select(litters_df, group, gd0_weight:gd_of_birth)
-
-select(litters_df, group, starts_with("pups")) #selects all columns that start with pups
-
-select(litters_df, -litter_number) #removes litter number
-
-select(litters_df, -starts_with("gd")) #removes all columns that start with gd
-
-select(litters_df, group, litter_id = litter_number) #rename litter number to litter id
-
-select(litters_df, group, litter_id = litter_number, everything()) # everything keeps all the other columns that                                                                      weren't mentioned
-
-select(litters_df, gd0_weight, everything()) # everything can help reorder columns
-```
-
-
-'select' vs 'pull'
-select will always give dataframe
-pull will create a vector, pulls column out of dataframe so that it no longer exists in that dataframe
-
-```{r}
-select(litters_df, group)
-pull(litters_df, group)
-```
-
-Learning Assessment:
-In the pups data, select the columns containing litter number, sex, and PD ears.
-
-```{r}
-select(pups_df, litter_number, sex, pd_ears)
-```
-
-##filter
-
-Get rid of rows using 'filter()'
-```{r}
-filter(litters_df, group =="Con7")
-
-filter(litters_df, group =="Mod8")
-
-filter(litters_df, group != "Con7")
-
-filter(litters_df, gd0_weight > 20)
-
-filter(litters_df, gd0_weight <= 20)
-
-filter(litters_df, group =="Con7" | group == "Con8")
-
-filter(litters_df, group %in% c("Con7", "Con8"))
-
-filter(litters_df, !(group == "Con7"))
-
-filter(litters_df, group %in% c("Con7", "Con8"), gd0_weight > 20)
-```
-
-What about missing rows
-
-```{r}
-drop_na(litters_df) #removes all missing values
-drop_na(litters_df, gd0_weight) #removes missing values from defined columns
-```
-
-
-##mutate
-
-Mutate is used to add or change variables
-
-```{r}
-mutate(litters_df, wt_gain = gd18_weight - gd0_weight) #create new columns
-
-mutate(litters_df, group = str_to_lower(group)) #modify existing variables
-
-mutate(
-  litters_df,
-  wt_gain = gd18_weight - gd0_weight,
-  group = str_to_lower(group)
-)
-```
-
-##arrange
-
-Can rearrange data values, lists in ascending order
-
-```{r}
-arrange(litters_df, gd0_weight)
-arrange(litters_df, group, gd0_weight)
-```
-
-Helpful to use for nested data structures
-
-##pipes
-
-```{r}
-#ctrl + shift + M - shortcut for pipe code
-
-litters_df = 
-  read_csv("data/FAS_litters.csv") |> #takes whatever comes out of read_csv and inputs into clean names
+  haven::read_sas("data/public_pulse_data.sas7bdat") |> 
   janitor::clean_names() |> 
-  select(-starts_with("pups")) |> 
-    mutate(
-     group = str_to_lower(group),
-     wt_gain = gd18_weight - gd0_weight,
-     ) |> 
-   drop_na(wt_gain) |> 
-   arrange(group, wt_gain)
-view(litters_df)
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit",
+    values_to = "bdi_score",
+    names_prefix = "bdi_score_"
+  ) |> 
+  mutate(
+    visit = replace(visit, visit == "bl", "00m")
+  )
+
+print(pulse_df)
+
 ```
+
+## Import // lengthen the litters dataset
+
+```{r}
+litters_df = 
+  read_csv("data/Fas_litters.csv") |> 
+  janitor::clean_names() |> 
+  select(litter_number,gd0_weight,gd18_weight) |> 
+  pivot_longer(
+    gd0_weight:gd18_weight,
+    names_to = "gd",
+    values_to = "weight",
+    names_prefix = "gd"
+  ) |> 
+  mutate(
+    gd = case_match(
+      gd,
+      "0_weight"  ~ 0,
+      "18_weight" ~ 18
+    )
+  )
+
+print(litters_df)
+```
+
+## LOTR
+
+Import LoTR words data
+
+```{r}
+fellowship_df = 
+  readxl::read_excel("data/LotR_Words.xlsx", range = "B3:D6") |> 
+  mutate(movie = "fellowship")
+  
+two_towers_df = 
+  readxl::read_excel("data/LotR_Words.xlsx", range = "F3:H6") |> 
+  mutate(movie = "two towers")
+
+return_of_the_king_df = 
+  readxl::read_excel("data/LotR_Words.xlsx", range = "J3:L6") |> 
+  mutate(movie = "return of the king")
+
+lotr_df = 
+  bind_rows(fellowship_df, two_towers_df, return_of_the_king_df) |> 
+  janitor::clean_names() |> 
+  pivot_longer(
+    male:female,
+    names_to = "gender",
+    values_to = "word"
+  ) |> 
+  relocate(movie)
+
+print(lotr_df)
+
+```
+
 
